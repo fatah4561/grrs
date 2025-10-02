@@ -1,6 +1,5 @@
-use std::{io::{self, Write}, thread::sleep, time::Duration};
+use std::{fs::File, io::{self, BufRead, BufReader, Write}, thread::sleep, time::Duration};
 
-use anyhow::Context;
 use clap::{Parser};
 use ansi_term::Color::{Green, Blue};
 use log::{info, warn};
@@ -16,16 +15,30 @@ struct Cli {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
 
-    let content = std::fs::read_to_string(&args.path).
-    with_context(|| {
-        format!("could not read file `{}`", args.path.display())
-    })?;
+    // using buff reader
+    let text_file = File::open(&args.path)?;
+    let reader = BufReader::new(text_file);
 
-    for line in content.lines() {
+    for (i, line) in reader.lines().enumerate() {
+        let line = line?;
+
         if line.contains(&args.pattern) {
-            println!("{}", line)
-        }
+            println!("{} is on line {}", line, i)
+        } 
+
     }
+
+    // load all ways
+    // let content = std::fs::read_to_string(&args.path).
+    // with_context(|| {
+    //     format!("could not read file `{}`", args.path.display())
+    // })?;
+
+    // for line in content.lines() {
+    //     if line.contains(&args.pattern) {
+    //         println!("{}", line)
+    //     }
+    // }
 
     let stdout = io::stdout();
     let mut handle = io::BufWriter::new(stdout.lock());
